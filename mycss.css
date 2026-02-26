@@ -1,0 +1,8 @@
+canvas{
+    height : 200px;
+    width : 400px;
+    background-color: white;
+    position : relative;
+    border: solid;
+    border-color: black;
+}
