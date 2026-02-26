@@ -8,6 +8,7 @@ const square_size = 10;
 const rows = 20;
 const columns= 40;
 let mode = "";
+brushcolor = "#000000"
 
 function addTools(){
     const tools = document.getElementById('tools');
