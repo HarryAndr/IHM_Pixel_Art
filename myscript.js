@@ -10,6 +10,9 @@ const columns= 40;
 let mode = "";
 brushcolor = "#000000"
 
+let startX, startY;
+let snapshot;
+
 function addTools(){
     const tools = document.getElementById('tools');
 
@@ -32,6 +35,31 @@ function addTools(){
         brushColor = selectColor.value;
     })
 
+
+    //
+    const rectBtn = document.createElement('button');
+    rectBtn.innerHTML = "Rectangle";
+    rectBtn.addEventListener('click', () => {
+        mode = "rectangle";
+        // Désactiver visuellement comme pour les autres boutons
+        if (lastButton) { lastButton.disabled = false; lastButton.classList.remove("disabled"); }
+        rectBtn.disabled = true; rectBtn.classList.add("disabled");
+        lastButton = rectBtn;
+    });
+
+    const circBtn = document.createElement('button');
+    circBtn.innerHTML = "Cercle";
+    circBtn.addEventListener('click', () => {
+        mode = "circle";
+        if (lastButton) { lastButton.disabled = false; lastButton.classList.remove("disabled"); }
+        circBtn.disabled = true; circBtn.classList.add("disabled");
+        lastButton = circBtn;
+    });
+
+    tools.appendChild(rectBtn);
+    tools.appendChild(circBtn);
+    //
+
     tools.appendChild(brush);
     tools.appendChild(eraser);
     tools.appendChild(selectColor);;
@@ -51,6 +79,9 @@ function brushmode(brush) {
     
     mode = "brush";
     lastButton = brush;
+
+
+    updateCanvasCursor("brush");
 }
 function erasermode(eraser) {
     
@@ -65,6 +96,8 @@ function erasermode(eraser) {
     mode = "eraser";
     console.log("Mode actuel :", mode);
     lastButton = eraser;
+
+    updateCanvasCursor("eraser");
 }
 
 function drawCartesianGrid(square_size,rows,cols){
@@ -168,7 +201,16 @@ function onMouseMove(event) {
     handleDrag(x, y);
 }
 
-canvas.addEventListener("mousedown", () => {
+canvas.addEventListener("mousedown", (event) => {
+
+
+    //
+    const rect = canvas.getBoundingClientRect();
+    startX = event.clientX - rect.left;
+    startY = event.clientY - rect.top;
+
+    snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    //
 
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("mouseup", function onMouseUp(){
@@ -185,4 +227,44 @@ drawCartesianGrid(square_size,rows,columns)
 //const cartesien = toCartesianCoordinate(10, 25, 25);
 //console.log(cartesien)
 
-//tools();
+
+/*__________________________________________________________________*/
+
+
+function updateCanvasCursor(currentMode) {
+    const canvasElement = document.getElementById("myCanvas");
+
+    canvasElement.classList.remove("cursor-brush", "cursor-eraser");
+
+    if (currentMode === "brush") {
+        canvasElement.classList.add("cursor-brush");
+    } else if (currentMode === "eraser") {
+        canvasElement.classList.add("cursor-eraser");
+    }
+}
+
+
+
+function handleDrag(x, y) 
+{
+    if (mode === "brush") startDrawing(x, y, brushColor);
+    else if (mode === "eraser") startDrawing(x, y, "#FFFFFF");
+
+    else if (mode === "rectangle" || mode === "circle") {
+        ctx.putImageData(snapshot, 0, 0);
+        
+        ctx.strokeStyle = brushColor;
+        ctx.lineWidth = 2;
+
+        if (mode === "rectangle") {
+            ctx.strokeRect(startX, startY, x - startX, y - startY);
+        } 
+        else if (mode === "circle") {
+            const radius = Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2));
+            ctx.beginPath();
+            ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+    }
+}
+/*-------------------------------------------------------------------*/
