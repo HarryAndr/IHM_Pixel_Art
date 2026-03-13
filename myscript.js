@@ -1,5 +1,6 @@
 const canvas = document.getElementById("myCanvas");
 const ctx = canvas.getContext('2d');
+const body = document.body;
 
 canvas.width = canvas.offsetWidth;
 canvas.height = canvas.offsetHeight;
@@ -8,12 +9,13 @@ const square_size = 10;
 const rows = 20;
 const columns= 40;
 let mode = "";
-brushcolor = "#000000"
+let brushColor = "#000000";
 
 function addTools(){
-    const tools = document.getElementById('tools');
 
-    const brush = document.createElement('button')
+    const tools = document.getElementById('tools');
+    const brush = document.createElement('button');
+
     brush.innerHTML = "Brush"
     brush.addEventListener('click', () =>{
         brushmode(brush)
@@ -25,6 +27,7 @@ function addTools(){
         erasermode(eraser)
     })
 
+
     const selectColor = document.createElement('input');
     selectColor.type="color";
 
@@ -32,9 +35,14 @@ function addTools(){
         brushColor = selectColor.value;
     })
 
+    const POT2_Peinture = document.createElement('button');
+    POT2_Peinture.innerHTML = "Pot"
+    POT2_Peinture.addEventListener('click', () => { Pot_2_Peinture(POT2_Peinture)});
+
+    tools.appendChild(POT2_Peinture);
     tools.appendChild(brush);
     tools.appendChild(eraser);
-    tools.appendChild(selectColor);;
+    tools.appendChild(selectColor);
 }
 
 var lastButton = null
@@ -52,6 +60,7 @@ function brushmode(brush) {
     mode = "brush";
     lastButton = brush;
 }
+
 function erasermode(eraser) {
     
     if (lastButton !== null) {
@@ -66,6 +75,8 @@ function erasermode(eraser) {
     console.log("Mode actuel :", mode);
     lastButton = eraser;
 }
+
+
 
 function drawCartesianGrid(square_size,rows,cols){
     ctx.beginPath()
@@ -85,6 +96,132 @@ function drawCartesianGrid(square_size,rows,cols){
     ctx.stroke();
 }
 
+
+/* Bloc de code de Djag à ajouter 
+
+------------->>> Pot_2_Peinture <<<<< prends comme paramètre l'élément créer POT2_Peinture 
+et gère de la même manière que pour le brush et l'eraser 
+
+
+------------->>> ColorierTout <<<<< Est executer dans hancleClick si le mode est pot
+
+------------->>> PotSelection <<<<< Cette fonction qui est appellé plus bas dans le canvas.addEventListener("mousedown")
+                                    Elle gère le total de la fonctionnalité de gestion du rectangle de selection en mode pot
+                                    Sous la forme de 
+                                    Il est nécessaire de maintenir Ctrl lorsque l'on souhaite utiliser le mode selection en mode pot
+
+*/
+
+function Pot_2_Peinture(pot) { // FOnction à copier coller
+   
+    if (lastButton !== null) {
+        lastButton.classList.remove("disabled");
+        lastButton.disabled = false;
+    }
+    pot.classList.add("disabled");
+    pot.disabled = true; 
+    
+    mode = "pot";
+    lastButton = pot;
+};
+
+function ColorierTout(x1, y1, x2, y2) { // FOnction à copier coller
+    ctx.clearRect(x1, y1, x2, y2);
+    ctx.fillStyle = brushColor;
+    ctx.fillRect(x1, y1, x2, y2);
+    drawCartesianGrid(square_size, rows, columns);
+}
+
+let potSelectionDebut = null;
+let potSelectionEnd = null;
+let potSelectionActif = false;
+let canvasSnapshot = null;
+
+function PotSelection(event) { // Fonction a copier coller 
+
+    if (!event.ctrlKey) {
+        ColorierTout(0, 0, canvas.width, canvas.height);
+        return;
+    }
+    
+    const rect = canvas.getBoundingClientRect();
+    const startX = event.clientX - rect.left;
+    const startY = event.clientY - rect.top;
+    
+    const startCoord = toCartesianCoordinate(square_size, startX, startY);
+    potSelectionDebut = {
+        x: startCoord.colonne * square_size,
+        y: startCoord.ligne * square_size
+    };
+    
+    potSelectionActif = true;
+    
+    canvasSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    function onPotMouseMove(e) {
+        if (!potSelectionActif) return;
+        
+        const currentX = e.clientX - rect.left;
+        const currentY = e.clientY - rect.top;
+        
+        const endCoord = toCartesianCoordinate(square_size, currentX, currentY);
+        potSelectionEnd = {
+            x: (endCoord.colonne + 1) * square_size,
+            y: (endCoord.ligne + 1) * square_size
+        };
+        
+        ctx.putImageData(canvasSnapshot, 0, 0);
+                const selX = Math.min(potSelectionDebut.x, potSelectionEnd.x);
+        const selY = Math.min(potSelectionDebut.y, potSelectionEnd.y);
+        const selWidth = Math.abs(potSelectionEnd.x - potSelectionDebut.x);
+        const selHeight = Math.abs(potSelectionEnd.y - potSelectionDebut.y);
+        
+        ctx.strokeStyle = "#0066FF";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 3]);
+        ctx.strokeRect(selX, selY, selWidth, selHeight);
+        ctx.setLineDash([]);
+        ctx.lineWidth = 0.1;
+    }
+    
+    function onPotMouseUp(e) {
+        if (!potSelectionActif) return;
+        
+        const endX = e.clientX - rect.left;
+        const endY = e.clientY - rect.top;
+        
+        const endCoord = toCartesianCoordinate(square_size, endX, endY);
+        potSelectionEnd = {
+            x: (endCoord.colonne + 1) * square_size,
+            y: (endCoord.ligne + 1) * square_size
+        };
+        
+        const selX = Math.min(potSelectionDebut.x, potSelectionEnd.x);
+        const selY = Math.min(potSelectionDebut.y, potSelectionEnd.y);
+        const selWidth = Math.abs(potSelectionEnd.x - potSelectionDebut.x);
+        const selHeight = Math.abs(potSelectionEnd.y - potSelectionDebut.y);
+        
+        ctx.putImageData(canvasSnapshot, 0, 0);
+        
+        if (selWidth > 0 && selHeight > 0) {
+            ColorierTout(selX, selY, selWidth, selHeight);
+        }
+        
+        potSelectionActif = false;
+        potSelectionDebut = null;
+        potSelectionEnd = null;
+        canvasSnapshot = null;
+        
+        canvas.removeEventListener("mousemove", onPotMouseMove);
+        canvas.removeEventListener("mouseup", onPotMouseUp);
+    }
+    
+    canvas.addEventListener("mousemove", onPotMouseMove);
+    canvas.addEventListener("mouseup", onPotMouseUp);
+}
+
+// Fin de la section Djag à copier coller
+
 function toPixelCoordinate(square_size, colonne, ligne){
     return {
         px:square_size*(colonne-1),
@@ -93,8 +230,8 @@ function toPixelCoordinate(square_size, colonne, ligne){
 }
 
 function toCartesianCoordinate(square_size, x,y){
-    console.log("round x", Math.round(x/square_size))
-    console.log("pas round",x/square_size )
+    // console.log("round x", Math.round(x/square_size))
+    // console.log("pas round",x/square_size )
     if (Math.round(x/square_size) < x/square_size && Math.round(y/square_size) < y/square_size){
         return {
         colonne:Math.round(x/square_size),
@@ -118,14 +255,22 @@ function toCartesianCoordinate(square_size, x,y){
     
 }
 
-canvas.addEventListener("click", (event) => {
+canvas.addEventListener("mousedown", (event) => { // Section à part à ajouter pour gérer le mousedown j'ai pas réussi à l'ajouter à HandleClick ça m'as soulé
     let elem = document.querySelector("canvas");
     let rect = elem.getBoundingClientRect();
-    console.log("rect.left", rect.left)
-    console.log("rect top",rect.top)
-    const x = event.clientX-rect.left;
-    const y = event.clientY-rect.top;
-    handleClick(x, y);
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    if (mode === "pot") {
+        PotSelection(event); 
+    } else {
+        handleClick(x, y);
+        canvas.addEventListener("mousemove", onMouseMove);
+        canvas.addEventListener("mouseup", function onMouseUp(){
+            canvas.removeEventListener("mousemove", onMouseMove);
+            canvas.removeEventListener("mouseup", onMouseUp);
+        });
+    }
 });
 
 function fillSquare(square_size, x,y,color){
@@ -142,11 +287,13 @@ function startDrawing(x,y,color){
     colonne = toCartesianCoordinate(10,x,y).colonne *10;
     ligne = toCartesianCoordinate(10,x,y).ligne * 10;
 
-    console.log("ligne", ligne)
-    console.log("colonne", colonne)
+    // console.log("ligne", ligne)
+    // console.log("colonne", colonne)
 
     fillSquare(10,colonne,ligne,color)
 }
+
+
 
 function handleClick(x,y){
 
@@ -154,11 +301,12 @@ function handleClick(x,y){
     else if (mode =="eraser") startDrawing(x,y,"#FFFFFF")
 }
 
+
 function handleDrag(x,y){
 
     if (mode == "brush") startDrawing(x,y,brushColor)
     else if (mode == "eraser") startDrawing(x,y,"#FFFFFF")
-    
+
 }
 
 function onMouseMove(event) {
@@ -168,17 +316,13 @@ function onMouseMove(event) {
     handleDrag(x, y);
 }
 
-canvas.addEventListener("mousedown", () => {
-
-    canvas.addEventListener("mousemove", onMouseMove);
-    canvas.addEventListener("mouseup", function onMouseUp(){
-        canvas.removeEventListener("mousemove", onMouseMove);
-    });
-});
 
 
 addTools();
 drawCartesianGrid(square_size,rows,columns)
+
+
+
 //fillSquare(10,10,10,"#A627F5")
 //const coordonnees = toPixelCoordinate(10, 2, 2);
 //console.log(coordonnees)
