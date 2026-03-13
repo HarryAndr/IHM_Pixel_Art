@@ -255,6 +255,22 @@ function toCartesianCoordinate(square_size, x,y){
     
 }
 
+canvas.addEventListener("mousedown", (event) => { // Section à part à ajouter ... pour gérer le mousedown j'ai pas réussi à l'ajouter à HandleClick ça m'as soulé parce que faut récupérer le paramètre event dans le potSelection et je vois pas comment faire sans le mettre au sein de la fonction addEventListener.
+    let rect = canvas.getBoundingClientRect(); 
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    if (mode === "pot") {
+        PotSelection(event); 
+    } else {
+        handleClick(x, y);
+        canvas.addEventListener("mousemove", onMouseMove);
+        canvas.addEventListener("mouseup", function onMouseUp(){
+            canvas.removeEventListener("mousemove", onMouseMove);
+            canvas.removeEventListener("mouseup", onMouseUp);
+        });    }
+});
+
 function fillSquare(square_size, x,y,color){
     ctx.fillStyle = color;
     ctx.fillRect(x, y, square_size, square_size)
