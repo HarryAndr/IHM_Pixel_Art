@@ -155,7 +155,6 @@ function PotSelection(event) { // Fonction a copier coller
     };
     
     potSelectionActif = true;
-    
     canvasSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
     
     function onPotMouseMove(e) {
@@ -182,6 +181,7 @@ function PotSelection(event) { // Fonction a copier coller
         ctx.strokeRect(selX, selY, selWidth, selHeight);
         ctx.setLineDash([]);
         ctx.lineWidth = 0.1;
+            // Paramètrage de la ligne ligne des selecion
     }
     
     function onPotMouseUp(e) {
@@ -270,6 +270,8 @@ canvas.addEventListener("mousedown", (event) => { // Section à part à ajouter 
             canvas.removeEventListener("mouseup", onMouseUp);
         });    }
 });
+
+// Fin de la section à ajouter 
 
 function fillSquare(square_size, x,y,color){
     ctx.fillStyle = color;
