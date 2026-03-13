@@ -35,11 +35,11 @@ function addTools(){
         brushColor = selectColor.value;
     })
 
-    const POT2_Peinture = document.createElement('button');
+    const POT2_Peinture = document.createElement('button'); // à copier coller début
     POT2_Peinture.innerHTML = "Pot"
     POT2_Peinture.addEventListener('click', () => { Pot_2_Peinture(POT2_Peinture)});
 
-    tools.appendChild(POT2_Peinture);
+    tools.appendChild(POT2_Peinture); // à copier coller fin
     tools.appendChild(brush);
     tools.appendChild(eraser);
     tools.appendChild(selectColor);
@@ -100,10 +100,10 @@ function drawCartesianGrid(square_size,rows,cols){
 /* Bloc de code de Djag à ajouter 
 
 ------------->>> Pot_2_Peinture <<<<< prends comme paramètre l'élément créer POT2_Peinture 
-et gère de la même manière que pour le brush et l'eraser 
+et gère de la même manière que pour le brush et l'eraser. Ligne 38 à 42 à copier coller dcp
 
 
-------------->>> ColorierTout <<<<< Est executer dans hancleClick si le mode est pot
+------------->>> ColorierTout <<<<< Elle est utilisé par PotSelection pas besoin de l'appeler
 
 ------------->>> PotSelection <<<<< Cette fonction qui est appellé plus bas dans le canvas.addEventListener("mousedown")
                                     Elle gère le total de la fonctionnalité de gestion du rectangle de selection en mode pot
